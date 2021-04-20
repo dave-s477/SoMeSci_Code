@@ -1,3 +1,6 @@
 [submodule "SoMeSci"]
 	path = SoMeSci
 	url = https://github.com/dave-s477/SoMeSci.git
+[submodule "SoMeNLP"]
+	path = SoMeNLP
+	url = https://github.com/dave-s477/SoMeNLP.git
