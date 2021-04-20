@@ -23,6 +23,7 @@ To this end, it contains the following repositories as `git submodules`:
 
 * [SoMeSci](https://github.com/dave-s477/SoMeSci/): manually gold standard annotated software mentions in scholarly articles 
 * [SoMeNLP](https://github.com/dave-s477/SoMeNLP): implementation of the use cases for using the manually annotated software mentions as training set
+(Note that both bring their own licenses)
 
 In addition, this repository contains the file `create_SoMeSci.py`, to create the knowledge graph representation of the annotation.
 To run the code the following steps have to be done:
@@ -36,7 +37,7 @@ The corpus and the resulting SoMeSci knowledge graph are published at Zenodo [![
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
-This work is licensed under a [Creative Commons Attribution 4.0 International
+This work (but not the submodules) is licensed under a [Creative Commons Attribution 4.0 International
 License][cc-by].
 
 [![CC BY 4.0][cc-by-image]][cc-by]
