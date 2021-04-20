@@ -1,0 +1,3 @@
+[submodule "SoMeSci"]
+	path = SoMeSci
+	url = https://github.com/dave-s477/SoMeSci.git

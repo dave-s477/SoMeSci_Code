@@ -1,0 +1,445 @@
+{
+    "@context": {
+        "@vocab": "http://schema.org/",
+        "its": "http://www.w3.org/2005/11/its/rdf#",
+        "nif": "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
+        "sms": "http://data.gesis.org/somesci/",
+        "wd": "http://www.wikidata.org/entity/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "comment": "http://www.w3.org/2000/01/rdf-schema#comment"
+    },
+    "@graph": [
+        {
+            "@id": "sms:URLIdentifiedObjectPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents a thing that can have an URL"
+        },
+        {
+            "@id": "sms:VersionableObjectPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents a thing that can have different Versions"
+        },
+        {
+            "@id": "sms:SoftwarePhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {"@id": "sms:VersionableObjectPhrase"},
+                {"@id": "sms:URLIdentifiedObjectPhrase"}
+            ],
+            "comment": "Phrase that represents a software"
+        },
+        {
+            "@id": "sms:VersionPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents an identifier of a version a software"
+        },
+        {
+            "@id": "sms:SoftwareDeveloperPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:URLIdentifiedObjectPhrase"
+            },
+            "comment": "Phrase that represents the developer or publisher of a software"
+        },
+        {
+            "@id": "sms:AbbreviationPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents an abbreviation of an actual software name"
+        },
+        {
+            "@id": "sms:SoftwareExtensionPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents the extension of a software"
+        },
+        {
+            "@id": "sms:SoftwareAlternativeNamePhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents an alternative name for a software"
+        },
+        {
+            "@id": "sms:SoftwareCitationPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents a formal citation for a software"
+        },
+        {
+            "@id": "sms:SoftwareReleasePhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents a date-based version identifier"
+        },
+        {
+            "@id": "sms:URLPhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "nif:Phrase"
+                },
+                {
+                    "@id": "nif:OffsetBasedString"
+                }
+            ],
+            "comment": "Phrase that represents an URL"
+        },
+        {
+            "@id": "sms:LicensePhrase",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": [
+                {"@id": "sms:VersionableObjectPhrase"},
+                {"@id": "sms:URLIdentifiedObjectPhrase"}
+            ],
+            "comment": "Phrase that represents the license of software"
+        },
+        {
+            "@id": "sms:Software",
+            "@type": "rdfs:Class",
+            "comment": "Executable component of a computer",
+            "sameAs": {
+                "@id": "wd:Q7397"
+            }
+        },
+        {
+            "@id": "sms:Application",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Software"
+            },
+            "comment": "Program designed for end-users",
+            "sameAs": {
+                "@id": "wd:Q166142"
+            }
+        },
+        {
+            "@id": "sms:PlugIn",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Software"
+            },
+            "comment": "Software component that extends the functionality of an existing software, but cannot be used independently from it",
+            "sameAs": "wdQ184148"
+        },
+        {
+            "@id": "sms:ProgrammingEnvironment",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Software"
+            },
+            "comment": "Collection of programs to create software"
+        },
+        {
+            "@id": "sms:OperatingSystem",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Software"
+            },
+            "comment": "Software that manages computer hardware resources",
+            "sameAs": {
+                "@id": "wd:Q9135"
+            }
+        },
+        {
+            "@id": "sms:SoftwareCoreference",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Software"
+            },
+            "comment": "Reference to a software without explicitly naming it"
+        },
+        {
+            "@id": "sms:Allusion",
+            "@type": "rdfs:Class",
+            "comment": "General software statement"
+        },
+        {
+            "@id": "sms:Usage",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Allusion"
+            },
+            "comment": "Software statement that indicates a contribution to the study"
+        },
+        {
+            "@id": "sms:Creation",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Allusion"
+            },
+            "comment": "Software statement that indicates the creation of the software"
+        },
+        {
+            "@id": "sms:Deposition",
+            "@type": "rdfs:Class",
+            "rdfs:subClassOf": {
+                "@id": "sms:Creation"
+            },
+            "comment": "Software statement that indicates the creation and publication of the software"
+        },
+        {
+            "@id": "sms:Abbreviation",
+            "@type": "rdfs:Class",
+            "comment": "Short name"
+        },
+        {
+            "@id": "sms:Developer",
+            "@type": "rdfs:Class",
+            "comment": "person or company concerned with facets of the software development process",
+            "sameAs": {
+                "@id": "wd:Q183888"
+            }
+        },
+        {
+            "@id": "sms:AlternativeName",
+            "@type": "rdfs:Class",
+            "comment": "Second name for a given software which is longer or at least as long as the given name"
+        },
+        {
+            "@id": "sms:Citation",
+            "@type": "rdfs:Class",
+            "comment": "Bibliographic scholarly citation",
+            "sameAs": {
+                "@id": "wd:Q1713"
+            }
+        },
+        {
+            "@id": "sms:URL",
+            "@type": "rdfs:Class",
+            "comment": "Uniform Resource Locator",
+            "sameAs": {
+                "@id": "wd:Q42253"
+            }
+        },
+        {
+            "@id": "sms:License",
+            "@type": "rdfs:Class",
+            "comment": "set of permissions and restrictions to use something",
+            "sameAs": {
+                "@id": "wd:Q79719"
+            }
+        },
+        {
+            "@id": "sms:Extension",
+            "@type": "rdfs:Class",
+            "comment": "Special edition of a software",
+            "sameAs": {
+                "@id": "wd:Q1341283"
+            }
+        },
+        {
+            "@id": "sms:Release",
+            "@type": "rdfs:Class",
+            "comment": "Date-based identifier of publication"
+        },
+        {
+            "@id": "sms:Version",
+            "@type": "rdfs:Class",
+            "comment": "Number based identifier of a publication"
+        },
+        {
+            "@id": "sms:hasVersion",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a version",
+            "rdfs:domain": {
+                "@id": "sms:VersionableObjectPhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:VersionPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasExtension",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with an extension",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwareExtensionPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasRelease",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a release",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwareReleasePhrase"
+            }
+        },
+        {
+            "@id": "sms:hasDeveloper",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with an developer",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwareDeveloperPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasAlternativeName",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with an alternative name",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwareAlternativeNamePhrase"
+            }
+        },
+        {
+            "@id": "sms:hasPlugIn",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a plugin",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwarePhrase"
+            }
+        },
+        {
+            "@id": "sms:hasCitation",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a citation",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:SoftwareCitationPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasSpecification",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a specification",
+            "rdfs:domain": {
+                "@id": "sms:VersionableObjectPhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:VersionableObjectPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasAbbreviation",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with an abbreviation",
+            "rdfs:domain": {
+                "@id": "sms:URLIdentifiedObjectPhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:AbbreviationPhrase"
+            }
+        },
+
+        {
+            "@id": "sms:hasURL",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with an URL",
+            "rdfs:domain": {
+                "@id": "sms:URLIdentifiedObjectPhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:URLPhrase"
+            }
+        },
+        {
+            "@id": "sms:hasLicense",
+            "rdfs:subPropertyOf": {
+                "@id": "nif:inter"
+            },
+            "comment": "Refers to an accompanied phrase with a license",
+            "rdfs:domain": {
+                "@id": "sms:SoftwarePhrase"
+            },
+            "rdfs:range": {
+                "@id": "sms:LicensePhrase"
+            }
+        }
+    ]
+}
