@@ -30,7 +30,7 @@ To run the code the following steps have to be done:
 
 The corpus and the resulting SoMeSci knowledge graph are published at Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4701764.svg)](https://doi.org/10.5281/zenodo.4701764)
 
-A hosted version of the Knowledge Graph with a SPARQL Endpoint and sample queries for analyses can be found at [https://data.gesis.org/somesci].
+A hosted version of the Knowledge Graph with a SPARQL Endpoint and sample queries for analyses can be found at https://data.gesis.org/somesci.
 
 
 
