@@ -1,6 +1,4 @@
-# **SoMeSci**: **So**ftware **Me**ntions in **Sci**entific Articles ISWC article
-
-This repository contains all supplementary files for SoMeSci ISWC 2021 submission
+# **SoMeSci**: **So**ftware **Me**ntions in **Sci**entific Articles
 
 **SoMeSci–A 5 Star Open Data Gold Standard Knowledge Graph of Software Mentions in Scientific Articles** by
 
@@ -9,12 +7,11 @@ David Schindler, Felix Bensmann, Stefan Dietze, and Frank Krüger
 ## Abstract of the paper
 Knowledge about software used in scientific investigations is important for several reasons, for instance, to enable an understanding of provenance and methods involved in data handling.
 However, software is usually not formally cited, but rather mentioned informally within the scholarly description of the investigation, raising the need for automatic information extraction and disambiguation. 
-Given the lack of reliable ground truth data, we present SoMeSci a gold standard knowledge graph of software mentions in scientific articles. 
-It contains high quality annotations (IRR: $\kappa{=}.82$) of 3756 software mentions in 1367 articles. 
-Besides the plain mention of the software, we also provide relation labels for additional information such as the version, the developer, a URL or citations. 
+Given the lack of reliable ground truth data, we present SoMeSci---Software Mentions in Scientific Articles---a gold standard knowledge graph of software mentions in scientific articles. 
+It contains high quality annotations (IRR: k=.82) of 3756 software mentions in 1367 articles. 
+Besides the plain mention of the software, we also provide relation labels for additional information, such as the version, the developer, a URL or citations. 
 Moreover, we distinguish between different types, such as application, plugin or programming environment, as well as different types of mentions, such as usage or creation.
-%The identity of each software, developer, and reference are provided by an URL, 
-To the best of our knowledge, \corpus{} is the most comprehensive corpus about software mentions in scientific articles, providing training samples for Named Entity Recognition, Relation Extraction, Entity Disambiguation, and Entity Linking.
+To the best of our knowledge, SoMeSci is the most comprehensive corpus about software mentions in scientific articles, providing training samples for Named Entity Recognition, Relation Extraction, Entity Disambiguation, and Entity Linking.
 Finally, we sketch potential use cases and provide baseline results for the different tasks.
 
 
