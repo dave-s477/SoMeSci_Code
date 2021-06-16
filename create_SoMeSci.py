@@ -1,10 +1,15 @@
+# To add a new cell, type '# %%'
+# To add a new markdown cell, type '# %% [markdown]'
+#%%
+
 from articlenizer import formatting 
 from rdflib import Graph, plugin, URIRef, Literal
 from rdflib.serializer import Serializer
-from rdflib.namespace import XSD, RDF, RDFS
+from rdflib.namespace import XSD, RDF, RDFS, FOAF
 import json
 import os
-import csv
+import copy
+
 
 warnings = []
 
@@ -15,16 +20,24 @@ def warning(warn):
 
 # URLs for used vocabulary
 context = {
-    "@vocab" : "http://schema.org/",
-    "@base" : "http://data.gesis.org/somesci/",
-    "sms" : "http://data.gesis.org/somesci/",
-    "nif" : "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
-    "wd" : "http://www.wikidata.org/entity/",
-    "its": "http://www.w3.org/2005/11/its/rdf#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "comment": "http://www.w3.org/2000/01/rdf-schema#comment"
-}
+        "@vocab" : "http://schema.org/",
+        "@base" : "http://data.gesis.org/somesci/",
+        "sms" : "http://data.gesis.org/somesci/",
+        "nif" : "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
+        "wd" : "http://www.wikidata.org/entity/",
+        "its": "http://www.w3.org/2005/11/its/rdf#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "prov" : "http://www.w3.org/TR/prov-o/#",
+        "comment": "http://www.w3.org/2000/01/rdf-schema#comment",
+        "void": "http://rdfs.org/ns/void#",
+        "dcterms" : "http://purl.org/dc/terms/",
+        "foaf": "http://xmlns.com/foaf/0.1/",
+        "schema" : "http://schema.org/",
+        "dcat" : "http://www.w3.org/ns/dcat#"
+    }
+
+
 
 keywords = ["Scientific Articles","Corpus", "Software Mention","Named Entity Recognition","Relation Extraction","Entity Disambiguation","Entity Linking"]
 
@@ -34,6 +47,7 @@ software = {
     'PlugIn' : 'sms:PlugIn', # plug-in
     'ProgrammingEnvironment' : 'sms:ProgrammingEnvironment', # programming language
     'OperatingSystem' : 'sms:OperatingSystem', # operating system
+#    'web' : 'wd:Q193424', #web service 
     'depositionstatment' : 'sms:SoftwareCoreference', #coreference
 }
 
@@ -66,6 +80,11 @@ entity_map = {'Application_Usage' : [software['Application'], mention['usage'] ]
             'PlugIn_Mention' : [ software['PlugIn'], mention['allusion']],
             'PlugIn_Deposition' : [ software['PlugIn'],mention['deposition']],
 
+           # 'web_usage' : [ software['web'],mention['usage']],
+           # 'web_creation' : [ software['web'], mention['creation']],
+           # 'web_mention' : [software['web'], mention['allusion']],
+           # 'web_deposition' : [ software['web'], mention['deposition']],
+
             'SoftwareCoreference_Deposition' : [software['depositionstatment'], mention['deposition']],
 
             'Abbreviation' : ['sms:Abbreviation'], # abbreviation
@@ -79,58 +98,76 @@ entity_map = {'Application_Usage' : [software['Application'], mention['usage'] ]
             'License' : ['sms:License'] # licence
 }
 
-# mapping of text labels to nif:phrase subclasses
-phrase_map = {'Application_Usage' : "sms:SoftwarePhrase",
-            'Application_Creation' : "sms:SoftwarePhrase",
-            'Application_Mention' : "sms:SoftwarePhrase",
-            'Application_Deposition' : "sms:SoftwarePhrase",
+phrase_map = {'Application_Usage' : "nif:Phrase",
+            'Application_Creation' : "nif:Phrase",
+            'Application_Mention' : "nif:Phrase",
+            'Application_Deposition' : "nif:Phrase",
             
-            'OperatingSystem_Usage' : "sms:SoftwarePhrase",
-            'OperatingSystem_Creation' : "sms:SoftwarePhrase",
-            'OperatingSystem_Mention' : "sms:SoftwarePhrase",
-            'OperatingSystem_Deposition' : "sms:SoftwarePhrase",
+            'OperatingSystem_Usage' : "nif:Phrase",
+            'OperatingSystem_Creation' : "nif:Phrase",
+            'OperatingSystem_Mention' : "nif:Phrase",
+            'OperatingSystem_Deposition' : "nif:Phrase",
             
-            'ProgrammingEnvironment_Usage' : "sms:SoftwarePhrase",
-            'ProgrammingEnvironment_Creation' : "sms:SoftwarePhrase",
-            'ProgrammingEnvironment_Mention' : "sms:SoftwarePhrase",
-            'ProgrammingEnvironment_Deposition' : "sms:SoftwarePhrase",
+            'ProgrammingEnvironment_Usage' : "nif:Phrase",
+            'ProgrammingEnvironment_Creation' : "nif:Phrase",
+            'ProgrammingEnvironment_Mention' : "nif:Phrase",
+            'ProgrammingEnvironment_Deposition' : "nif:Phrase",
             
-            'PlugIn_Usage' : "sms:SoftwarePhrase",
-            'PlugIn_Creation' : "sms:SoftwarePhrase",
-            'PlugIn_Mention' : "sms:SoftwarePhrase",
-            'PlugIn_Deposition' : "sms:SoftwarePhrase",
+            'PlugIn_Usage' : "nif:Phrase",
+            'PlugIn_Creation' : "nif:Phrase",
+            'PlugIn_Mention' : "nif:Phrase",
+            'PlugIn_Deposition' : "nif:Phrase",
 
-            'SoftwareCoreference_Deposition' : "sms:SoftwarePhrase",
+           # 'web_usage' : [ software['web'],mention['usage']],
+           # 'web_creation' : [ software['web'], mention['creation']],
+           # 'web_mention' : [software['web'], mention['allusion']],
+           # 'web_deposition' : [ software['web'], mention['deposition']],
 
-            'Abbreviation' : 'sms:AbbreviationPhrase', # abbreviation
-            'Developer' : 'sms:SoftwareDeveloperPhrase', #publisher
-            'Extension' : 'sms:SoftwareExtensionPhrase', # special edition
-            'AlternativeName' : 'sms:SoftwareAlternativeNamePhrase', 
-            'Citation' : 'sms:SoftwareCitationPhrase', # reference
-            'Release' : 'sms:SoftwareReleasePhrase', # software release
-            'URL' : 'sms:URLPhrase', # Uniform Resource Locator
-            'Version' : 'sms:VersionPhrase', # software version
-            'License' : 'sms:LicensePhrase' # licence
+            'SoftwareCoreference_Deposition' : "nif:Phrase",
+
+            'Abbreviation' : 'nif:Phrase', # abbreviation
+            'Developer' : 'nif:Phrase', #publisher
+            'Extension' : 'nif:Phrase', # special edition
+            'AlternativeName' : 'nif:Phrase', 
+            'Citation' : 'nif:Phrase', # reference
+            'Release' : 'nif:Phrase', # software release
+            'URL' : 'nif:Phrase', # Uniform Resource Locator
+            'Version' : 'nif:Phrase', # software version
+            'License' : 'nif:Phrase' # licence
 }
 
 # mapping of relations to wikidata properties
 # note that relations are inverted here
 relation_map = {
-            'Abbreviation_of' : 'sms:hasAbbreviation',
-            'Developer_of' : 'sms:hasDeveloper',
-            'Extension_of' : 'sms:Extension',
-            'AlternativeName_of' : 'sms:hasAlternativeName', # official name
-            'PlugIn_of' : 'sms:hasPlugIn',
-            'Citation_of' : 'sms:hasCitation',
-            'Release_of' : 'sms:hasRelease',
-            'Specification_of' : 'sms:hasSpecification',
-            'URL_of' : 'sms:hasURL', # URL
-            'Version_of' : 'sms:hasVersion', # software version identifier
-            'License_of' : 'sms:hasLicense'
+            'Abbreviation_of' : 'sms:refersTo',
+            'Developer_of' : 'sms:refersTo',
+            'Extension_of' : 'sms:refersTo',
+            'AlternativeName_of' : 'sms:refersTo', # official name
+            'PlugIn_of' : 'sms:refersTo',
+            'Citation_of' : 'sms:refersTo',
+            'Release_of' : 'sms:refersTo',
+            'Specification_of' : 'sms:refersTo',
+            'URL_of' : 'sms:refersTo', # URL
+            'Version_of' : 'sms:refersTo', # software version identifier
+            'License_of' : 'sms:refersTo'
 }
 
-# list of labels to be linked to external identities
+inv_relation_map = {
+            'Abbreviation_of' : 'sms:referredToByAbbreviation',
+            'Developer_of' : 'sms:referredToByDeveloper',
+            'Extension_of' : 'sms:referredToByExtension',
+            'AlternativeName_of' : 'sms:referredToByAlternativeName', # official name
+            'PlugIn_of' : 'sms:referredToByPlugIn',
+            'Citation_of' : 'sms:referredToByCitation',
+            'Release_of' : 'sms:referredToByRelease',
+            'Specification_of' : 'sms:referredToBySpecification',
+            'URL_of' : 'sms:referredToByURL', # URL
+            'Version_of' : 'sms:referredToByVersion', # software version identifier
+            'License_of' : 'sms:referredToByLicense'
+}
+
 link_entities = [
+    #"abbreviation",
     "Developer",
     "License",
     "URL",
@@ -205,135 +242,185 @@ for lic in l:
 
 # create graph based with some predefined properties
 g = Graph()
-g.parse("empty_graph.jsonld", format="json-ld")
 
 
 # add dataset meta data
 dataset = URIRef("./")
-g.add((dataset, RDF.type, URIRef("Dataset")))
-g.add((dataset,URIRef("license"), URIRef("https://creativecommons.org/licenses/by/4.0/")))
-g.add((dataset, URIRef("name"), Literal("SoMeSci")))
-g.add((dataset, URIRef("description"), Literal("A 5 Star Open Data Goldstand Corpus of Software Mentions in Scientific Articles")))
+g.add((dataset, RDF.type, URIRef("void:Dataset")))
+g.add((dataset, RDF.type, URIRef("dcat:Resource")))
+g.add((dataset,URIRef("dcterms:license"), URIRef("https://creativecommons.org/licenses/by/4.0/")))
+g.add((dataset, URIRef("dcterms:title"), Literal("SoMeSci")))
+g.add((dataset, URIRef("dcterms:description"), Literal("A 5 Star Open Data Goldstand Corpus of Software Mentions in Scientific Articles")))
 for k in keywords:
-    g.add((dataset, URIRef("keywords"), Literal(k)))
+    g.add((dataset, URIRef("dcat:keyword"), Literal(k)))
+g.add((dataset, URIRef("dcat:landingPage"), URIRef("https://data.gesis.org/somesci/")))
+g.add((dataset, URIRef("dcat:contactPoint"), URIRef("https://data.gesis.org/somesci/index.html#contact")))
 
-# Author David
-g.add((dataset, URIRef("author"),URIRef("https://www.orcid.org/0000-0003-4203-8851")))
-g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), RDF.type, URIRef("Person")))
-g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("name"), Literal("David Schindler")))
-g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("email"), Literal("mailto:david.schindler@uni-rostock.de")))
-g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("organisation"), URIRef("https://ror.org/03zdwsf69")))
+for _,v in context.items():
+    g.add((dataset, URIRef("void:vocabulary"), Literal(v)))
 
-# Author Felix
-g.add((dataset, URIRef("author"),URIRef("StefanDietze")))
-g.add((URIRef("StefanDietze"), RDF.type, URIRef("Person")))
-g.add((URIRef("StefanDietze"), URIRef("name"), Literal("Stefan Dietze")))
-g.add((URIRef("StefanDietze"), URIRef("email"), Literal("stefan.dietze@gesis.org")))
-g.add((URIRef("StefanDietze"), URIRef("organisation"), URIRef("https://ror.org/018afyw53")))
-g.add((URIRef("StefanDietze"), URIRef("organisation"), URIRef("https://ror.org/024z2rq82")))
+g.add((dataset, URIRef("void:feature"), URIRef("http://www.w3.org/ns/formats/JSON-LD")))
+g.add((dataset, URIRef("void:sparqlEndpoint"), URIRef("https://data.gesis.org/somesci/sparql")))
+g.add((dataset, URIRef("dcterms:issued"), Literal("2021-06-16T24:00:00",datatype=XSD.dateTime)))
 
-# Author Stefan 
-g.add((dataset, URIRef("author"),URIRef("FelixBensmann")))
-g.add((URIRef("FelixBensmann"), RDF.type, URIRef("Person")))
-g.add((URIRef("FelixBensmann"), URIRef("name"), Literal("Felix Bensmann")))
-g.add((URIRef("FelixBensmann"), URIRef("email"), Literal("felix.bensmann@gesis.org")))
-g.add((URIRef("FelixBensmann"), URIRef("organisation"), URIRef("https://ror.org/018afyw53")))
 
-# Author Frank
-g.add((dataset, URIRef("author"),URIRef("https://www.orcid.org/0000-0002-7925-3363")))
-g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), RDF.type, URIRef("Person")))
-g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("name"), Literal("Frank Krüger")))
-g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("email"), Literal("frank.krueger@uni-rostock.de")))
-g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("organisation"), URIRef("https://ror.org/03zdwsf69")))
+      
 
-# Funding
-g.add((dataset, URIRef("funding"), URIRef("299150580")))
-g.add((URIRef("299150580"), RDF.type, URIRef("Grant")))
-g.add((URIRef("299150580"), URIRef("funder"), URIRef("https://ror.org/018mejw64")))
-g.add((URIRef("https://ror.org/018mejw64"), RDF.type, URIRef("Organisation")))
-g.add((URIRef("https://ror.org/018mejw64"), URIRef("name"), Literal("Deutsche Forschungsgemeinschaft")))
 
-# function to create nodes for plos articles
-def nodes_from_plos_methods(g, filename):
-    doi, _ = os.path.splitext(os.path.basename(filename))
-    doi = doi.replace('_','/')
-    #print("Working on {}".format(doi))
-    doc_id = "https://doi.org/{}".format(doi)
-    return add_document_node(g, filename, doc_id, doi)
+# Add parts of the datasets
+methods_dataset = URIRef("PLoS_Methods")
+g.add((methods_dataset, RDF.type, URIRef("void:Dataset")))
+g.add((methods_dataset, URIRef("dcterms:title"),Literal("PLoS methods")))
+g.add((methods_dataset, URIRef("prov:wasDerivedFrom"), URIRef("https://doi.org/10.5281/zenodo.3715147")))
+g.add((methods_dataset, URIRef("dcterms:description"),Literal("Contains methods sections from PLoS articles")))
+g.add((dataset, URIRef("void:subset"), methods_dataset))
 
-# function to create nodes for pmc articles
-def nodes_from_pubmed_fulltext(g, filename):
+
+sentences_dataset = URIRef("PLoS_sentences")
+g.add((sentences_dataset, RDF.type, URIRef("void:Dataset")))
+g.add((sentences_dataset, URIRef("dcterms:title"),Literal("PLoS sentences")))
+g.add((sentences_dataset, URIRef("prov:wasDerivedFrom"), URIRef("https://doi.org/10.5281/zenodo.3715147")))
+g.add((sentences_dataset, URIRef("dcterms:description"),Literal("Contains individual sentences with software mentions from PLoS articles")))
+g.add((dataset, URIRef("void:subset"), sentences_dataset))
+
+
+pubmed_dataset = URIRef("Pubmed_fulltexts")
+g.add((pubmed_dataset, RDF.type, URIRef("void:Dataset")))
+g.add((pubmed_dataset, URIRef("dcterms:title"),Literal("Pubmed fulltexts")))
+g.add((pubmed_dataset, URIRef("dcterms:description"),Literal("Contains fulltext articles randomly sampled from Pubmed Central")))
+g.add((dataset, URIRef("void:subset"), pubmed_dataset))
+
+
+creation_dataset = URIRef("Creation_sentences")
+g.add((creation_dataset, RDF.type, URIRef("void:Dataset")))
+g.add((creation_dataset, URIRef("dcterms:title"),Literal("Creation Sentences")))
+g.add((creation_dataset, URIRef("dcterms:description"),Literal("Contains individual sentences with statements about the creation of software from Pubmed Central articles")))
+g.add((dataset, URIRef("void:subset"), creation_dataset))
+
+
+g.add((dataset, URIRef("dcterms:creator"),URIRef("https://www.orcid.org/0000-0003-4203-8851")))
+g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), RDF.type, URIRef("foaf:Person")))
+g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("foaf:name"), Literal("David Schindler")))
+g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("foaf:mbox"), Literal("mailto:david.schindler@uni-rostock.de")))
+g.add((URIRef("https://www.orcid.org/0000-0003-4203-8851"), URIRef("schema:organisation"), URIRef("https://ror.org/03zdwsf69")))
+
+g.add((dataset, URIRef("dcterms:creator"),URIRef("creator3")))
+g.add((URIRef("creator3"), RDF.type, URIRef("foaf:Person")))
+g.add((URIRef("creator3"), URIRef("foaf:name"), Literal("Stefan Dietze")))
+g.add((URIRef("creator3"), URIRef("foaf:mbox"), Literal("stefan.dietze@gesis.org")))
+g.add((URIRef("creator3"), URIRef("schema:organisation"), URIRef("https://ror.org/018afyw53")))
+g.add((URIRef("creator3"), URIRef("schema:organisation"), URIRef("https://ror.org/024z2rq82")))
+
+g.add((dataset, URIRef("dcterms:creator"),URIRef("creator2")))
+g.add((URIRef("creator2"), RDF.type, URIRef("foaf:Person")))
+g.add((URIRef("creator2"), URIRef("foaf:name"), Literal("Felix Bensmann")))
+g.add((URIRef("creator2"), URIRef("foaf:mbox"), Literal("felix.bensmann@gesis.org")))
+g.add((URIRef("creator2"), URIRef("schema:organisation"), URIRef("https://ror.org/018afyw53")))
+
+
+g.add((dataset, URIRef("dcterms:creator"),URIRef("https://www.orcid.org/0000-0002-7925-3363")))
+g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), RDF.type, URIRef("foaf:Person")))
+g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("foaf:name"), Literal("Frank Krüger")))
+g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("foaf:mbox"), Literal("frank.krueger@uni-rostock.de")))
+g.add((URIRef("https://www.orcid.org/0000-0002-7925-3363"), URIRef("schema:organisation"), URIRef("https://ror.org/03zdwsf69")))
+
+g.serialize(format="json-ld", context=context, destination="somesci-metadata.jsonld")
+
+g.parse("empty_graph.jsonld", format="json-ld")
+
+
+# def nodes_from_plos_methods(g, filename):
+#     doi, _ = os.path.splitext(os.path.basename(filename))
+#     doi = doi.replace('_','/')
+#     #print("Working on {}".format(doi))
+#     doc_id = "https://doi.org/{}".format(doi)
+#     return add_document_node(g, filename, doc_id, doi)
+
+def get_ann_for_index(ann, beg, end):
+    selected_entities = {}
+    for k,v in ann['entities'].items():
+        if v['beg'] >= beg and v['end'] <= end:
+            selected_entities[k] = copy.deepcopy(v)
+            selected_entities[k]['beg'] -= beg
+            selected_entities[k]['end'] -= beg
+        elif v['beg'] < beg and v['end'] < beg or v['beg'] > end and v['end'] > end:
+            pass
+        else:
+            raise(RuntimeError("Entity error at {}: {}-{} vs {}-{}".format(k, v['beg'], v['end'], beg, end)))
+    selected_relations = {}
+    for k,v in ann['relations'].items():
+        if v['arg1'] in selected_entities and v['arg2'] in selected_entities:
+            selected_relations[k] = v
+        elif v['arg1'] not in selected_entities and v['arg2'] not in selected_entities:
+            pass
+        else:
+            raise(RuntimeError("Relation over two sentences"))
+    return selected_entities, selected_relations   
+
+def nodes_from_PMC_ID(g, filename,  sub_dataset):
     doi, _ = os.path.splitext(os.path.basename(filename))
     doi.replace('_','/')
-    #print("Working on {}".format(doi))
     doc_id = "https://www.ncbi.nlm.nih.gov/pmc/articles/{}".format(doi)
-    return add_document_node(g, filename, doc_id, doi)
 
-# function to create node based on annotated text file (*.{txt,ann})
-def add_document_node(g, fn_txt, doc_id, doi):
-    num_sent_with_labels = 0
-    num_sent = 0
-    fn_ann = os.path.splitext(fn_txt)[0] + ".ann"
+    fn_ann = os.path.splitext(filename)[0] + ".ann"
 
-    # both files
-    with open(fn_txt, 'r') as text_file, open(fn_ann,'r') as ann_file: 
+
+    with open(filename, 'r') as text_file, open(fn_ann,'r') as ann_file: 
         text = text_file.read()
         ann = ann_file.read()
-    # file empty, skip creating further nodes
-    if len(text.strip()) == 0:
-        warning("Empty text file: {}".format(fn_txt))
-        return (0,0,0)
 
-    # get preprocessed information from articlenizer package
     doc_ent_rel = formatting.annotation_to_dict(ann)
+    #print(doc_ent_rel)
     
-    # create node that holds the outer context for each document
     doc = URIRef(doi)
     sent_list = formatting.sentence_based_info(text, ann, process_unicode=False, replace_math=False, correct=False, corr_cite=False) 
     g.add((doc, RDF.type, URIRef("nif:Context")))
     g.add((doc, URIRef("nif:broaderContext"), URIRef(doc_id)))
     g.add((doc, URIRef("nif:isString"), Literal(text))) 
+    g.add((doc, URIRef("schema:isPartOf"), sub_dataset)) 
+    g.add((sub_dataset, URIRef("schema:hasPart"), doc))
+
+    if len(text.strip()) == 0:
+        warning("Empty text file: {}".format(filename))
+
+
     sent_nodes = {}
-
+    
     start_idx = 0
-    # for each sentence in document
     for sent_idx, sent in enumerate(sent_list):
-
-        # create node for sentence
         sent_id = "{}/sentence{}".format(doi, sent_idx)
         nsent = URIRef(sent_id)
         g.add((nsent, RDF.type, URIRef("nif:Context")))
         g.add((nsent, RDF.type, URIRef("nif:Sentence")))
         g.add((nsent, RDF.type, URIRef("nif:OffsetBasedString")))
+#        g.add((nsent, URIRef("schema:isPartOf"), sub_dataset))
         g.add((nsent, URIRef("nif:broaderContext"), doc))
         g.add((nsent, URIRef("nif:beginIndex"), Literal(start_idx)))
         end_idx = start_idx + len(sent['string'])
         g.add((nsent, URIRef("nif:endIndex"), Literal(end_idx)))
         g.add((nsent, URIRef("nif:isString"), Literal(sent['string'])))
-        start_idx = end_idx + 1
 
-        num_sent += 1
-        if len(sent['entities']) > 0:
-            num_sent_with_labels +=1
-    
+ 
         for eid, entity in sent['entities'].items():
+            #if "software_suggestion" == entity['label']:
+            #    warning("Found invalid entity")
+            #    continue
 
             nentity = URIRef("{}/{}".format(sent_id, eid))
             sent_nodes[eid] = nentity
-
-            # get the particular nif:phrase subtype for this annotation type            
+            
             if not entity['label'] in phrase_map:
                 warning("No phrase type defined for {}".format(entity['label']))
                 continue
             else:
                 g.add((nentity, RDF.type, URIRef(phrase_map[entity['label']])))
-            # create nif:phrase information
+            
+            #g.add((nentity, RDF.type, URIRef("nif:OffsetBasedString")))
             g.add((nentity, URIRef("nif:anchorOf"), Literal(entity['string'])))
             g.add((nentity, URIRef("nif:beginIndex"), Literal(entity['beg'])))
             g.add((nentity, URIRef("nif:endIndex"), Literal(entity['end'])))
             g.add((nentity, URIRef("nif:referenceContext"), URIRef(nsent)))
             
-            # get the particular class label from the mapping 
             classURLs = entity_map[entity['label']]
             for classURL in classURLs:
                 g.add((nentity, URIRef("its:taClassRef"), URIRef(classURL)))
@@ -343,7 +430,6 @@ def add_document_node(g, fn_txt, doc_id, doi):
                 continue
             label0 = entity['label'].split('_')[0]
 
-            # link the different types
             if label0 in software.keys():      
                 if doc_id in software_links and sent_idx in software_links[doc_id]:
                     softwares = software_links[doc_id][sent_idx]
@@ -362,6 +448,7 @@ def add_document_node(g, fn_txt, doc_id, doi):
                     warning("Did not find entity '{}' of type '{}' in sentence {} in linking list of {}".format(entity['string'], label0, sent_idx,  doc_id))
                     
             elif label0 == 'Developer':
+                #print("Found developer {} in document {}".format(entity['string'], doc_id))
                 if doc_id in developer and sent_idx in developer[doc_id]:
                     developers = developer[doc_id][sent_idx]
                     # search for correct developer
@@ -415,6 +502,7 @@ def add_document_node(g, fn_txt, doc_id, doi):
 
     # finally, transfer relations from textual format for nif:inter based format
     for relation in doc_ent_rel['relations'].values():
+        #print(relation)
         if relation['label'] not in relation_map:
             warning("Unkown Relation: {}".format(relation['label']))
             continue
@@ -422,65 +510,108 @@ def add_document_node(g, fn_txt, doc_id, doi):
         nsoftware = sent_nodes[relation['arg2']]
         ninfo = sent_nodes[relation['arg1']]
         predicate = relation_map[relation['label']]
-        g.add((nsoftware,URIRef(predicate), ninfo))
-    return (num_sent_with_labels, num_sent, len(sent_list))
+        g.add((ninfo,URIRef(predicate), nsoftware))
+        
+        if relation['label'] not in inv_relation_map:
+            warning("Unkown Relation: {}".format(relation['label']))
+            continue
+        predicate = inv_relation_map[relation['label']]
+        g.add((nsoftware, URIRef(predicate), ninfo))
+    return
 
 
-# go through all documents of the respective sub groups
+# %%
+from lxml import etree
+
+def methods_titles_from_xml(files, xml_folder):
+    sections = {}
+    for filename in files:
+        with open(filename,'r') as file:
+            l = sum([len(ll) for ll in file.readlines()])
+        
+        id = os.path.splitext(os.path.basename(filename))[0]
+        xml_file = os.path.join(xml_folder, id + ".nxml")
+        with open(xml_file, 'r' ) as f:
+            tree = etree.parse(f)
+            sec_titles_nodes = tree.xpath("//body/sec/title")
+            sec_titles = [t.text for t in sec_titles_nodes if "method" in t.text.lower()]
+            if len(set(sec_titles)) != 1: #exact 1 methods sections, or at least all with the same name
+                warning("No unique methods ({}, {}) section found in {}".format(len(sec_titles), sec_titles, xml_file)) 
+            else:
+                sections[id] = {sec_titles[0] : {'Begin' : 0,'End' : l}}
+    return sections
+
+def methods_from_src(files):
+    sections = {}
+    for filename in files:
+        id = os.path.splitext(os.path.basename(filename))[0]
+        src_file = os.path.splitext(filename)[0] + '.src'
+        sections[id] = {}
+        with open(filename,'r') as file, open(src_file, 'r') as src:
+            txt_lines = file.readlines()
+            src_lines = src.readlines()
+        if len(txt_lines) != len(src_lines):
+            warning("Length of file do not match ({}:{}) for {}".format(len(txt_lines),len(src_lines), filename))
+            continue
+        cursor = 0
+        last_cursor = 0
+        cur_section = None
+        for idx, txt_line in enumerate(txt_lines):
+            if cur_section and cur_section != src_lines[idx]:    
+                sections[id][cur_section] = {'Begin' : last_cursor, 'End': cursor}
+                last_cursor = cursor + 1
+            cur_section = src_lines[idx].strip()
+            cursor += len(txt_line)
+    return sections
+
+            
+  
+
+
+# %%
+plos_methods = []
+pubmed_fulltext = []
+plos_sentences = []
+
+
 
 path = os.path.join(path_f,"PLoS_methods")
 plos_methods = [os.path.join(path,file) for file in os.listdir(path) if file.endswith(".txt")]
 print(len(plos_methods))
+#plos_methods_sections = methods_titles_from_xml(plos_methods, "../Annotation/XML/PLoS_methods/")
+
 
 path = os.path.join(path_f,"Pubmed_fulltext")
 pubmed_fulltext = [os.path.join(path,file) for file in os.listdir(path) if file.endswith(".txt")]
 print(len(pubmed_fulltext))
+#with open("../Annotation/KG/Pubmed_fulltext/section_overview.json",'r') as f:
+#    pubmed_fulltext_sections = json.load(f)
 
 path = os.path.join(path_f,"PLoS_sentences")
 plos_sentences = [os.path.join(path, file) for file in os.listdir(path) if file.endswith(".txt")]
 print(len(plos_sentences))
+#plos_sentences_sections = methods_titles_from_xml(plos_sentences, "../Annotation/XML/PLoS_sentences/")
+
 
 path = os.path.join(path_f,"Creation_sentences")
-plos_creation_sentences = [os.path.join(path, file) for file in os.listdir(path) if file.endswith(".txt") and file.startswith("10.1371")]
-print(len(plos_creation_sentences))
-
-PMC_creation_sentences = [os.path.join(path, file) for file in os.listdir(path) if file.endswith(".txt") and file.startswith("PMC")]
+PMC_creation_sentences = [os.path.join(path, file) for file in os.listdir(path) if file.endswith(".txt") ]
 print(len(PMC_creation_sentences))
 
-sent_count = 0
-sent_count2 = 0
-sent_count_with_label = 0
 
 for ps_doc in plos_sentences:
-    c = nodes_from_plos_methods(g, ps_doc)
-    sent_count_with_label += c[0]
-    sent_count += c[1]
-    sent_count2 += c[2]
+    c = nodes_from_PMC_ID(g, ps_doc, sentences_dataset)
 for ps_doc in plos_methods:
-    c = nodes_from_plos_methods(g, ps_doc)
-    sent_count_with_label += c[0]
-    sent_count2 += c[2]
-    sent_count += c[1]
-for ps_doc in plos_creation_sentences:
-    c = nodes_from_plos_methods(g, ps_doc)
-    sent_count_with_label += c[0]
-    sent_count += c[1]
-    sent_count2 += c[2]
+    c = nodes_from_PMC_ID(g, ps_doc, methods_dataset)
 for pm_doc in pubmed_fulltext:
-    c = nodes_from_pubmed_fulltext(g, pm_doc)
-    sent_count_with_label += c[0]
-    sent_count += c[1]
-    sent_count2 += c[2]
+   c = nodes_from_PMC_ID(g, pm_doc, pubmed_dataset)
 for pm_doc in PMC_creation_sentences:
-    nodes_from_pubmed_fulltext(g, pm_doc)
-    sent_count_with_label += c[0]
-    sent_count += c[1]
-    sent_count2 += c[2]
+    nodes_from_PMC_ID(g, pm_doc, creation_dataset)
 
 g.serialize(format="json-ld", context=context, destination="somesci.jsonld")
 print("Got {} warnings".format(len(warnings)))
-print("Of {} sentences, {} have labels".format(sent_count, sent_count_with_label))
 
+
+# %%
 print("Number of triples in graph: {}".format(len(g)))
 
 
