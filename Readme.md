@@ -25,7 +25,7 @@ To this end, it contains the following repositories as `git submodules`:
 In addition, this repository contains the file `create_SoMeSci.py`, to create the knowledge graph representation of the annotation.
 To run the code the following steps have to be done:
 * Get the sub modules `git submodule update --init`
-* Install necessary packages `pip install -i requirements.txt`
+* Install necessary packages `pip install -r requirements.txt`
 * Run the code `python3 create_SoMeSci.py` 
 
 The corpus and the resulting SoMeSci knowledge graph are published at Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4701763.svg)](https://doi.org/10.5281/zenodo.4701763)
